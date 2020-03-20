@@ -5,19 +5,19 @@ import (
 	"net"
 )
 
-func main() {
-	tcpAddr, err := net.ResolveTCPAddr("tcp", "211.251.238.39:500")
-	if nil != err{
-		fmt.Println(err)
-	}
+type NetworkInfo struct {
+	Port	string
+	Address	string
+	Command	string
+}
 
-	//addr 와 통신을 시도.
-	conn, err := net.DialTCP("tcp", nil, tcpAddr)
-	if nil != err {
-		fmt.Println(err)
-	}
+//private class method
+func getTcpAddress(info *NetworkInfo) string {
+	return fmt.Sprintf("%s:%s", info.Address , info.Port)
+}
 
-	cmd := []byte("run:GUIDER top -J -a -e dn")
+func runCommand(conn net.Conn, command string) {
+	cmd := []byte(command)
 	conn.Write(cmd)
 
 	recvBuf := make([]byte, 4096)
@@ -31,9 +31,20 @@ func main() {
 			data := recvBuf[:n]
 			fmt.Println(string(data))
 		}
+	}
+}
 
+func main() {
+	networkInfo := new(NetworkInfo)
+	networkInfo.Port = "500"
+	networkInfo.Address = "211.251.238.39"
+	networkInfo.Command = "run:GUIDER top -J -a -e dn"
+
+	//addr 와 통신을 시도.
+	conn, err := net.Dial("tcp", getTcpAddress(networkInfo))
+	if nil != err {
+		fmt.Println(err)
 	}
 
-
-
+	runCommand(conn, networkInfo.Command)
 }
