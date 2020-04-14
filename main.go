@@ -3,6 +3,7 @@ package main
 import (
 	"fmt"
 	"net"
+	"os"
 )
 
 type NetworkInfo struct {
@@ -30,15 +31,25 @@ func runCommand(conn net.Conn, command string) {
 		if 0 < n {
 			data := recvBuf[:n]
 			fmt.Println(string(data))
+		} else {
+			conn.Close()
 		}
 	}
 }
 
 func main() {
+	if len(os.Args) < 2 {
+		panic("plz put argument")
+	}
+
+	port := os.Args[1]
+	address := os.Args[2]
+	command := os.Args[3]
+	//"run:GUIDER top -J -a -e dn"
 	networkInfo := new(NetworkInfo)
-	networkInfo.Port = "500"
-	networkInfo.Address = "211.251.238.39"
-	networkInfo.Command = "run:GUIDER top -J -a -e dn"
+	networkInfo.Port = port
+	networkInfo.Address = address
+	networkInfo.Command = command
 
 	//addr 와 통신을 시도.
 	conn, err := net.Dial("tcp", getTcpAddress(networkInfo))
