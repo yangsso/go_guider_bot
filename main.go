@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"net"
 	"os"
+	//"github.com/nlopes/slack"
 )
 
 type NetworkInfo struct {
@@ -17,8 +18,21 @@ func getTcpAddress(info *NetworkInfo) string {
 	return fmt.Sprintf("%s:%s", info.Address , info.Port)
 }
 
-func runCommand(conn net.Conn, command string) {
-	cmd := []byte(command)
+func getRunGuiderCommand(info *NetworkInfo) string {
+	return fmt.Sprintf("run:%s",info.Command)
+}
+
+func tcpConnectByNetInfo(info *NetworkInfo) net.Conn {
+	//addr 와 통신을 시도.
+	conn, err := net.Dial("tcp", getTcpAddress(info))
+	if nil != err {
+		panic(err)
+	}
+	return conn
+}
+
+func runCommand(conn net.Conn, info *NetworkInfo) {
+	cmd := []byte(getRunGuiderCommand(info))
 	conn.Write(cmd)
 
 	recvBuf := make([]byte, 4096)
@@ -37,6 +51,7 @@ func runCommand(conn net.Conn, command string) {
 	}
 }
 
+
 func main() {
 	if len(os.Args) < 2 {
 		panic("plz put argument")
@@ -51,11 +66,6 @@ func main() {
 	networkInfo.Address = address
 	networkInfo.Command = command
 
-	//addr 와 통신을 시도.
-	conn, err := net.Dial("tcp", getTcpAddress(networkInfo))
-	if nil != err {
-		fmt.Println(err)
-	}
-
-	runCommand(conn, networkInfo.Command)
+	conn := tcpConnectByNetInfo(networkInfo)
+	runCommand(conn, networkInfo)
 }
